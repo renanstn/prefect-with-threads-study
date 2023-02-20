@@ -1,7 +1,7 @@
 import threading
 
 import boto3
-from prefect import Flow, Task
+from prefect import Flow, Task, Parameter
 
 
 class GetListOfValues(Task):
@@ -10,11 +10,11 @@ class GetListOfValues(Task):
 
 
 class CreateBoto3Session(Task):
-    def run(self):
+    def run(self, aws_access_key_id, aws_secret_access_key):
         client = boto3.client(
             "s3",
-            aws_access_key_id="",
-            aws_secret_access_key="",
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
         )
         return client
 
@@ -56,8 +56,14 @@ class PrintValue(Task):
 
 # =============================================================================
 with Flow("flow-threads-and-boto3") as flow:
+    aws_access_key_id = Parameter("AWS access key ID")
+    aws_secret_access_key = Parameter("AWS secret access key")
+
     list_of_values = GetListOfValues(name="Generate list of values")()
-    client = CreateBoto3Session(name="Create session")()
+    client = CreateBoto3Session(name="Create session")(
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key
+    )
     # buckets = ListBuckets(name="List buckets")(client=client)
     buckets_and_values = ListBucketsUsingThreads(
         name="List buckets with threads"

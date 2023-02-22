@@ -6,7 +6,7 @@ from prefect import Flow, Task, Parameter
 
 class GetListOfValues(Task):
     def run(self):
-        return [i for i in range(0, 101)]
+        return [i for i in range(0, 100)]
 
 
 class CreateBoto3Session(Task):
@@ -29,16 +29,16 @@ class ListBucketsUsingThreads(Task):
         self.values_to_return = []
         threads = []
 
+        # Create and start threads
         for value in list_of_values:
-            threads.append(
-                threading.Thread(
+            thread = threading.Thread(
                     target=self.list_buckets, args=(client, value)
                 )
-            )
-        # Start threads
-        [i.start() for i in threads]
-        # Join threads
-        [i.join() for i in threads]
+            threads.append(thread)
+            thread.start()
+        # Join threads, so the main function will wait for them to finish
+        for thread in threads:
+            thread.join()
 
         return self.values_to_return
 

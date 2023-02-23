@@ -26,15 +26,17 @@ class RefactoredAddRandomValueToValue(Task):
     def run(self, values: list):
         self.values_to_return = []
         threads = []
-        # Prepare threads
+
+        # Create and start threads
         for value in values:
-            threads.append(
-                threading.Thread(target=self.get_data_and_sum, args=(value,))
-            )
-        # Start threads
-        [i.start() for i in threads]
-        # Join threads
-        [i.join() for i in threads]
+            thread = threading.Thread(target=self.get_data_and_sum, args=(value,))
+            threads.append(thread)
+            thread.start()
+
+        # Join threads, so the main function will wait for them to finish
+        for thread in threads:
+            thread.join()
+
         return self.values_to_return
 
 
